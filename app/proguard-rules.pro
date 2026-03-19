@@ -1,0 +1,2 @@
+-keep class com.splitsmart.app.** { *; }
+-keepclassmembers class * { @android.webkit.JavascriptInterface <methods>; }

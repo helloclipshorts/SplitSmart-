@@ -1,0 +1,1703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0A0A0F">
+<title>SplitSmart</title>
+<style>
+:root{
+  --bg:#0A0A0F;--bg2:#13131C;--bg3:#1C1C2A;--bg4:#252535;
+  --green:#00E676;--green-dim:rgba(0,230,118,0.12);
+  --red:#FF4569;--red-dim:rgba(255,69,105,0.12);
+  --purple:#7C3AED;--purple-dim:rgba(124,58,237,0.15);
+  --amber:#F59E0B;--amber-dim:rgba(245,158,11,0.12);
+  --blue:#3B82F6;
+  --txt:#F0F0F8;--txt2:#8888A8;--txt3:#50506A;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --r:16px;--r-sm:10px;
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font-family:-apple-system,'Roboto','Segoe UI',sans-serif;font-size:15px;line-height:1.4;}
+
+/* ── SCREENS ── */
+.screen{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;overflow:hidden;z-index:1;
+  padding-top:var(--sat);}
+.screen.active{display:flex;}
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(80px + var(--sab));}
+.scroll::-webkit-scrollbar{display:none;}
+
+/* ── TOP BAR ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 8px;flex-shrink:0;}
+.topbar h2{font-size:22px;font-weight:700;letter-spacing:-0.4px;}
+.icon-btn{width:40px;height:40px;border-radius:12px;background:var(--bg3);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--txt2);flex-shrink:0;}
+.icon-btn svg{width:20px;height:20px;}
+.back-row{display:flex;align-items:center;gap:8px;cursor:pointer;border:none;background:none;color:var(--txt2);font-size:15px;font-weight:500;padding:4px 0;}
+.back-row svg{width:20px;height:20px;flex-shrink:0;}
+
+/* ── BOTTOM NAV ── */
+.bnav{position:fixed;bottom:0;left:0;right:0;background:rgba(10,10,15,0.97);border-top:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-around;padding:8px 4px calc(8px + var(--sab));z-index:100;backdrop-filter:blur(20px);}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:none;color:var(--txt3);cursor:pointer;padding:4px 0;}
+.nb.on{color:var(--purple);}
+.nb svg{width:22px;height:22px;}
+.nb span{font-size:10px;font-weight:500;}
+.fab{width:52px;height:52px;background:var(--purple);border-radius:16px;display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;flex-shrink:0;box-shadow:0 4px 20px rgba(124,58,237,0.45);}
+.fab svg{width:24px;height:24px;color:#fff;}
+.fab:active{transform:scale(0.92);}
+
+/* ── CARDS ── */
+.card{background:var(--bg2);border-radius:var(--r);border:0.5px solid var(--border);padding:16px;}
+.card-sm{background:var(--bg3);border-radius:var(--r-sm);padding:12px 14px;}
+
+/* ── BALANCE HERO ── */
+.hero{margin:0 16px 4px;background:var(--bg2);border-radius:20px;border:0.5px solid var(--border);padding:20px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;background:var(--purple-dim);border-radius:50%;filter:blur(50px);pointer-events:none;}
+.hero-row{display:flex;justify-content:space-between;align-items:flex-end;position:relative;}
+.hero-item label{font-size:11px;color:var(--txt3);font-weight:600;letter-spacing:0.5px;text-transform:uppercase;display:block;margin-bottom:4px;}
+.big{font-size:30px;font-weight:800;line-height:1;letter-spacing:-1px;}
+.big.g{color:var(--green);}
+.big.r{color:var(--red);}
+.netbar{height:3px;background:var(--bg4);border-radius:2px;margin-top:14px;overflow:hidden;position:relative;}
+.netbar-fill{height:100%;background:var(--green);border-radius:2px;transition:width .6s cubic-bezier(.16,1,.3,1);}
+
+/* ── SECTION HEADER ── */
+.sec{display:flex;justify-content:space-between;align-items:center;padding:14px 16px 6px;}
+.sec-title{font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;}
+.sec-action{font-size:12px;color:var(--purple);font-weight:600;cursor:pointer;border:none;background:none;}
+
+/* ── PERSON ROW ── */
+.prow{background:var(--bg2);border-radius:var(--r-sm);border:0.5px solid var(--border);padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:transform .1s;}
+.prow:active{transform:scale(0.98);}
+.av{width:42px;height:42px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0;letter-spacing:-0.5px;}
+.av-g{background:rgba(0,230,118,0.15);color:var(--green);}
+.av-r{background:rgba(255,69,105,0.15);color:var(--red);}
+.av-p{background:var(--purple-dim);color:#A78BFA;}
+.av-a{background:rgba(245,158,11,0.15);color:var(--amber);}
+.av-b{background:rgba(59,130,246,0.15);color:var(--blue);}
+.av-t{background:rgba(20,184,166,0.15);color:#2DD4BF;}
+.pinfo{flex:1;min-width:0;}
+.pname{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.psub{font-size:11px;color:var(--txt3);margin-top:2px;display:flex;align-items:center;gap:4px;}
+.badge-def{background:var(--red-dim);color:var(--red);border-radius:5px;padding:1px 5px;font-size:8px;font-weight:700;}
+.badge-days{background:var(--amber-dim);color:var(--amber);border-radius:5px;padding:1px 5px;font-size:9px;font-weight:600;}
+.badge-ok{background:rgba(0,230,118,0.1);color:var(--green);border-radius:5px;padding:1px 5px;font-size:9px;font-weight:600;}
+.amt-g{color:var(--green);font-size:15px;font-weight:700;}
+.amt-r{color:var(--red);font-size:15px;font-weight:700;}
+.amt-s{color:var(--txt3);font-size:13px;}
+
+/* ── QUICK ADD ── */
+.quick-add{margin:0 16px 8px;background:var(--purple-dim);border:0.5px dashed rgba(124,58,237,0.4);border-radius:var(--r-sm);padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;}
+.quick-add svg{width:18px;height:18px;color:var(--purple);}
+.quick-add span{font-size:13px;color:#A78BFA;font-weight:500;}
+
+/* ── FORMS ── */
+.fgrp{margin-bottom:14px;}
+.flabel{font-size:11px;color:var(--txt3);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block;}
+.finput{width:100%;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--r-sm);padding:13px 14px;color:var(--txt);font-size:15px;font-family:inherit;outline:none;transition:border-color .2s;-webkit-appearance:none;}
+.finput:focus{border-color:var(--purple);}
+.finput::placeholder{color:var(--txt3);}
+.finput option{background:var(--bg3);color:var(--txt);}
+.amt-wrap{position:relative;}
+.amt-prefix{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:24px;font-weight:800;color:var(--txt2);pointer-events:none;}
+.amt-big{padding-left:38px;font-size:34px;font-weight:800;letter-spacing:-1px;height:68px;}
+
+/* ── BUTTONS ── */
+.btn{width:100%;padding:15px;border-radius:var(--r-sm);border:none;font-size:16px;font-weight:700;cursor:pointer;transition:transform .15s,opacity .15s;font-family:inherit;}
+.btn:active{transform:scale(0.97);}
+.btn-p{background:var(--purple);color:#fff;box-shadow:0 4px 20px rgba(124,58,237,0.35);}
+.btn-g{background:var(--green);color:#001a09;box-shadow:0 4px 20px rgba(0,230,118,0.3);}
+.btn-r{background:var(--red);color:#fff;}
+.btn-out{background:transparent;color:var(--txt2);border:0.5px solid var(--border2);}
+.btn-sm{padding:9px 16px;font-size:13px;width:auto;border-radius:8px;}
+
+/* ── SPLIT TOGGLE ── */
+.stog{display:flex;background:var(--bg3);border-radius:10px;padding:3px;gap:2px;}
+.sopt{flex:1;padding:8px;text-align:center;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--txt3);transition:all .2s;border:none;background:none;font-family:inherit;}
+.sopt.on{background:var(--purple);color:#fff;}
+
+/* ── CATEGORY GRID ── */
+.catg{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+.cati{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:6px 2px;border-radius:10px;}
+.cati:active{background:var(--bg4);}
+.cati.on .caticon{background:var(--purple-dim);border-color:var(--purple);}
+.caticon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;background:var(--bg3);border:0.5px solid var(--border);}
+.catlbl{font-size:9px;color:var(--txt3);font-weight:500;}
+
+/* ── MEMBER CHECKBOXES ── */
+.mcheck{display:flex;align-items:center;gap:12px;padding:11px 13px;background:var(--bg2);border-radius:var(--r-sm);border:0.5px solid var(--border);cursor:pointer;transition:border-color .15s;margin-bottom:6px;}
+.mcheck.on{border-color:var(--purple);}
+.mcheck:active{transform:scale(0.98);}
+.chkbox{width:22px;height:22px;border-radius:7px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;}
+.mcheck.on .chkbox{background:var(--purple);border-color:var(--purple);}
+.chkbox svg{display:none;width:12px;height:12px;color:#fff;}
+.mcheck.on .chkbox svg{display:block;}
+.add-person-inline{display:flex;align-items:center;gap:10px;padding:10px 13px;background:transparent;border:0.5px dashed rgba(124,58,237,0.4);border-radius:var(--r-sm);cursor:pointer;color:#A78BFA;font-size:13px;font-weight:500;margin-bottom:6px;}
+.add-person-inline svg{width:16px;height:16px;color:var(--purple);}
+
+/* ── CUSTOM SPLIT ── */
+.csrow{display:flex;align-items:center;gap:10px;padding:8px 0;}
+.csname{flex:1;font-size:13px;font-weight:500;}
+.csinput{width:90px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--txt);font-size:14px;font-family:inherit;outline:none;text-align:right;-webkit-appearance:none;}
+.csinput:focus{border-color:var(--purple);}
+.csrem{border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;text-align:center;margin-top:4px;}
+
+/* ── UPI BUTTONS ── */
+.upi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;}
+.upi-btn{background:var(--bg3);border:0.5px solid var(--border);border-radius:12px;padding:12px 6px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;transition:all .15s;}
+.upi-btn:active{transform:scale(0.94);border-color:var(--purple);}
+.upi-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;}
+.upi-lbl{font-size:10px;color:var(--txt2);font-weight:500;}
+
+/* ── REMINDER CARDS ── */
+.rcard{border-radius:var(--r-sm);padding:12px 14px;cursor:pointer;border:1.5px solid transparent;margin-bottom:8px;transition:all .15s;}
+.rcard:active{transform:scale(0.98);}
+.rcard.friendly{background:rgba(0,230,118,0.06);}
+.rcard.serious{background:rgba(124,58,237,0.06);}
+.rcard.savage{background:rgba(255,69,105,0.06);}
+.rcard.roast{background:rgba(245,158,11,0.06);}
+.rcard.on.friendly{border-color:var(--green);}
+.rcard.on.serious{border-color:var(--purple);}
+.rcard.on.savage{border-color:var(--red);}
+.rcard.on.roast{border-color:var(--amber);}
+.rtone{font-size:12px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:6px;}
+.tf{color:var(--green);}
+.ts2{color:#A78BFA;}
+.tsav{color:var(--red);}
+.tro{color:var(--amber);}
+.rmsg{font-size:12px;color:var(--txt2);line-height:1.5;font-style:italic;}
+.prem-lock{background:var(--amber-dim);color:var(--amber);border-radius:20px;padding:2px 7px;font-size:8px;font-weight:700;}
+
+/* ── ACTIVITY ── */
+.aitem{display:flex;gap:12px;align-items:flex-start;padding:12px 16px;border-bottom:0.5px solid var(--border);}
+.aicon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;background:var(--bg3);}
+.abody{flex:1;min-width:0;}
+.atitle{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.asub{font-size:11px;color:var(--txt3);margin-top:2px;}
+.aamt{font-size:14px;font-weight:700;flex-shrink:0;text-align:right;}
+
+/* ── GROUPS ── */
+.gcard{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--r);padding:16px;margin:0 16px 10px;cursor:pointer;transition:transform .1s;}
+.gcard:active{transform:scale(0.98);}
+.gemoji{width:46px;height:46px;border-radius:14px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:22px;}
+.gmeta h3{font-size:16px;font-weight:700;}
+.gmeta span{font-size:11px;color:var(--txt3);}
+
+/* ── INSIGHTS ── */
+.ins-stat{background:var(--bg2);border-radius:var(--r-sm);border:0.5px solid var(--border);padding:14px;text-align:center;}
+.ins-val{font-size:24px;font-weight:800;letter-spacing:-0.5px;}
+.ins-lbl{font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.5px;margin-top:3px;}
+.catbar-row{margin-bottom:10px;}
+.catbar-top{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;}
+.catbar-track{height:6px;background:var(--bg4);border-radius:3px;overflow:hidden;}
+.catbar-fill{height:100%;border-radius:3px;transition:width .8s cubic-bezier(.16,1,.3,1);}
+.score-ring{width:80px;height:80px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;margin:0 auto 6px;border:3px solid;}
+
+/* ── SHARE CARD ── */
+.share-card{background:linear-gradient(135deg,#13131C,#1C1C2A);border-radius:20px;padding:20px;border:0.5px solid var(--border2);}
+.share-app-name{font-size:10px;font-weight:800;letter-spacing:2px;color:var(--purple);text-transform:uppercase;margin-bottom:10px;}
+
+/* ── CHIP ROW ── */
+.chips{display:flex;gap:6px;flex-wrap:wrap;}
+.chip{padding:7px 14px;border-radius:20px;border:0.5px solid var(--border2);font-size:12px;font-weight:500;cursor:pointer;background:var(--bg3);color:var(--txt2);transition:all .15s;font-family:inherit;}
+.chip.on{background:var(--purple-dim);border-color:var(--purple);color:#C4B5FD;}
+.chip:active{transform:scale(0.96);}
+
+/* ── MODALS ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;display:none;align-items:flex-end;backdrop-filter:blur(6px);}
+.overlay.open{display:flex;}
+.sheet{background:var(--bg2);border-radius:20px 20px 0 0;width:100%;max-height:88vh;overflow-y:auto;padding:0 20px calc(20px + var(--sab));animation:slideUp .3s cubic-bezier(.16,1,.3,1);}
+.sheet::-webkit-scrollbar{display:none;}
+.handle{width:36px;height:4px;background:var(--bg4);border-radius:2px;margin:14px auto 16px;}
+.sheet-title{font-size:18px;font-weight:700;margin-bottom:14px;}
+@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+
+/* ── EMPTY STATE ── */
+.empty{display:flex;flex-direction:column;align-items:center;padding:52px 24px;text-align:center;}
+.empty-emoji{font-size:52px;margin-bottom:16px;}
+.empty-title{font-size:18px;font-weight:700;margin-bottom:6px;}
+.empty-sub{font-size:13px;color:var(--txt3);line-height:1.6;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:calc(84px + var(--sab));left:50%;transform:translateX(-50%) translateY(16px);background:var(--bg3);border:0.5px solid var(--border2);border-radius:12px;padding:10px 18px;font-size:13px;font-weight:500;z-index:999;opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap;max-width:calc(100vw - 32px);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.ok{border-color:var(--green);color:var(--green);}
+.toast.err{border-color:var(--red);color:var(--red);}
+
+/* ── CONFETTI ── */
+.conf-wrap{position:fixed;inset:0;pointer-events:none;z-index:999;overflow:hidden;}
+.conf-p{position:absolute;width:8px;height:8px;border-radius:2px;animation:confFall 1.6s ease-in forwards;}
+@keyframes confFall{from{transform:translateY(-20px) rotate(0deg);opacity:1;}to{transform:translateY(110vh) rotate(720deg);opacity:0;}}
+
+/* ── PROFILE ── */
+.prem-banner{background:linear-gradient(135deg,rgba(124,58,237,0.2),rgba(245,158,11,0.15));border:0.5px solid rgba(124,58,237,0.4);border-radius:var(--r-sm);padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;}
+.set-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:0.5px solid var(--border);}
+.set-row:last-child{border:none;}
+
+/* ── MISC ── */
+.divider{height:0.5px;background:var(--border);margin:8px 0;}
+.p-list{padding:0 16px;display:flex;flex-direction:column;gap:7px;}
+.settle-item{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.fade-in{animation:fadeIn .25s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.exp-item{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+<div class="conf-wrap" id="conf"></div>
+
+<!-- ══════════════ ONBOARDING ══════════════ -->
+<div class="screen active" id="s-onboard" style="justify-content:space-between;padding-bottom:32px;">
+  <div style="padding:20px 20px 0;font-size:26px;font-weight:800;letter-spacing:-0.5px;">SplitSmart<span style="color:var(--purple)">.</span></div>
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+    <div id="oslide-0" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px 28px;flex:1;">
+      <div style="font-size:80px;margin-bottom:20px;animation:float 3s ease-in-out infinite;">💸</div>
+      <h1 style="font-size:28px;font-weight:800;line-height:1.2;margin-bottom:12px;letter-spacing:-0.5px;">Split expenses<br>in seconds</h1>
+      <p style="font-size:15px;color:var(--txt2);line-height:1.6;max-width:280px;">No more awkward "bro woh 500 wapas kab karega?" moments.</p>
+    </div>
+    <div id="oslide-1" style="display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px 28px;flex:1;">
+      <div style="font-size:80px;margin-bottom:20px;animation:float 3s ease-in-out infinite;">📊</div>
+      <h1 style="font-size:28px;font-weight:800;line-height:1.2;margin-bottom:12px;letter-spacing:-0.5px;">See who owes<br>what instantly</h1>
+      <p style="font-size:15px;color:var(--txt2);line-height:1.6;max-width:280px;">Green = they owe you. Red = you owe them. Simple.</p>
+    </div>
+    <div id="oslide-2" style="display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px 28px;flex:1;">
+      <div style="font-size:80px;margin-bottom:20px;animation:float 3s ease-in-out infinite;">😈</div>
+      <h1 style="font-size:28px;font-weight:800;line-height:1.2;margin-bottom:12px;letter-spacing:-0.5px;">Send reminders<br>they can't ignore</h1>
+      <p style="font-size:15px;color:var(--txt2);line-height:1.6;max-width:280px;">Friendly nudge to full Hinglish roast. Your choice.</p>
+    </div>
+  </div>
+  <div style="padding:0 24px;">
+    <div style="display:flex;gap:5px;justify-content:center;margin-bottom:20px;" id="odots">
+      <div style="width:20px;height:5px;border-radius:3px;background:var(--purple);" id="od0"></div>
+      <div style="width:6px;height:5px;border-radius:3px;background:var(--bg4);" id="od1"></div>
+      <div style="width:6px;height:5px;border-radius:3px;background:var(--bg4);" id="od2"></div>
+    </div>
+    <button class="btn btn-p" id="onext-btn" onclick="onboardNext()">Let's Go →</button>
+    <div style="text-align:center;margin-top:12px;"><span onclick="goSetup()" style="font-size:13px;color:var(--txt3);cursor:pointer;">Skip</span></div>
+  </div>
+</div>
+<style>@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}</style>
+
+<!-- ══════════════ SETUP ══════════════ -->
+<div class="screen" id="s-setup">
+  <div style="padding:48px 24px 24px;flex:1;display:flex;flex-direction:column;justify-content:center;">
+    <div style="font-size:40px;margin-bottom:20px;">👋</div>
+    <h2 style="font-size:28px;font-weight:800;margin-bottom:8px;letter-spacing:-0.5px;">Who are you?</h2>
+    <p style="font-size:14px;color:var(--txt2);margin-bottom:28px;">Your info stays on your device only.</p>
+    <div class="fgrp"><label class="flabel">Your name *</label><input class="finput" id="setup-name" type="text" placeholder="Vaibhav, Priya, Rahul..."></div>
+    <div class="fgrp"><label class="flabel">UPI ID <span style="color:var(--txt3);text-transform:none;letter-spacing:0;font-weight:400;">(so others can pay you)</span></label><input class="finput" id="setup-upi" type="text" placeholder="name@upi or 9876543210@gpay"></div>
+    <div class="fgrp"><label class="flabel">Phone <span style="color:var(--txt3);text-transform:none;letter-spacing:0;font-weight:400;">(for WhatsApp reminders)</span></label><input class="finput" id="setup-phone" type="tel" placeholder="10-digit number"></div>
+    <button class="btn btn-p" style="margin-top:8px;" onclick="saveSetup()">Start Splitting →</button>
+  </div>
+</div>
+
+<!-- ══════════════ HOME / DASHBOARD ══════════════ -->
+<div class="screen" id="s-home">
+  <div class="topbar">
+    <div><div style="font-size:12px;color:var(--txt3);font-weight:500;">Hey <span id="dash-hey">friend</span> 👋</div><h2 id="dash-title">Your Balances</h2></div>
+    <button class="icon-btn" onclick="nav('s-profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></button>
+  </div>
+  <div class="scroll">
+    <div class="hero" id="hero">
+      <div class="hero-row">
+        <div class="hero-item"><label>You will get</label><div class="big g" id="h-get">₹0</div></div>
+        <div class="hero-item" style="text-align:right;"><label>You owe</label><div class="big r" id="h-owe">₹0</div></div>
+      </div>
+      <div class="netbar"><div class="netbar-fill" id="netbar" style="width:50%;"></div></div>
+    </div>
+    <div class="sec">
+      <span class="sec-title">Balances</span>
+      <button class="sec-action" onclick="nav('s-add-person')">+ Add Person</button>
+    </div>
+    <div class="quick-add" onclick="nav('s-add-person')" id="quick-add-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/><line x1="12" y1="21" x2="12" y2="15"/><line x1="9" y1="18" x2="15" y2="18"/></svg>
+      <span>Add a person to start splitting</span>
+    </div>
+    <div class="p-list" id="dash-list"></div>
+    <div id="dash-empty" style="display:none;">
+      <div class="empty"><div class="empty-emoji">🤝</div><div class="empty-title">No balances yet</div><div class="empty-sub">Add an expense using the<br><strong style="color:var(--purple);">+</strong> button below</div></div>
+    </div>
+  </div>
+  <div class="bnav">
+    <button class="nb on" id="nb-home" onclick="tab('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></button>
+    <button class="nb" id="nb-groups" onclick="tab('groups')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Groups</span></button>
+    <button class="fab" onclick="nav('s-add-expense')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+    <button class="nb" id="nb-activity" onclick="tab('activity')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span>Activity</span></button>
+    <button class="nb" id="nb-insights" onclick="tab('insights')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>Insights</span></button>
+  </div>
+</div>
+
+<!-- ══════════════ GROUPS ══════════════ -->
+<div class="screen" id="s-groups">
+  <div class="topbar"><h2>Groups</h2><button class="icon-btn" onclick="nav('s-create-group')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>
+  <div class="scroll">
+    <div id="groups-list"></div>
+    <div id="groups-empty" style="display:none;"><div class="empty"><div class="empty-emoji">🏕️</div><div class="empty-title">No groups yet</div><div class="empty-sub">Create a group for your Goa trip,<br>hostel or flat</div><button class="btn btn-p" style="margin-top:20px;width:auto;padding:12px 28px;" onclick="nav('s-create-group')">Create Group</button></div></div>
+  </div>
+  <div class="bnav">
+    <button class="nb" onclick="tab('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></button>
+    <button class="nb on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Groups</span></button>
+    <button class="fab" onclick="nav('s-add-expense')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+    <button class="nb" onclick="tab('activity')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span>Activity</span></button>
+    <button class="nb" onclick="tab('insights')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>Insights</span></button>
+  </div>
+</div>
+
+<!-- ══════════════ ACTIVITY ══════════════ -->
+<div class="screen" id="s-activity">
+  <div class="topbar"><h2>Activity</h2></div>
+  <div class="scroll">
+    <div id="activity-list"></div>
+    <div id="activity-empty" style="display:none;"><div class="empty"><div class="empty-emoji">📋</div><div class="empty-title">No activity yet</div><div class="empty-sub">Your expense history appears here</div></div></div>
+  </div>
+  <div class="bnav">
+    <button class="nb" onclick="tab('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></button>
+    <button class="nb" onclick="tab('groups')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Groups</span></button>
+    <button class="fab" onclick="nav('s-add-expense')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+    <button class="nb on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span>Activity</span></button>
+    <button class="nb" onclick="tab('insights')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>Insights</span></button>
+  </div>
+</div>
+
+<!-- ══════════════ INSIGHTS ══════════════ -->
+<div class="screen" id="s-insights">
+  <div class="topbar"><h2>Insights 📊</h2></div>
+  <div class="scroll" style="padding:0 16px 24px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+      <div class="ins-stat"><div class="ins-val" id="ins-total" style="color:var(--purple);">₹0</div><div class="ins-lbl">Total Split</div></div>
+      <div class="ins-stat"><div class="ins-val" id="ins-pending" style="color:var(--amber);">₹0</div><div class="ins-lbl">Pending</div></div>
+      <div class="ins-stat"><div class="ins-val" id="ins-expenses" style="color:var(--blue);">0</div><div class="ins-lbl">Expenses</div></div>
+      <div class="ins-stat"><div class="ins-val" id="ins-people" style="color:var(--green);">0</div><div class="ins-lbl">People</div></div>
+    </div>
+    <div class="card" style="margin-bottom:14px;">
+      <div style="font-size:13px;font-weight:700;margin-bottom:14px;">Spending by Category</div>
+      <div id="ins-cats"></div>
+    </div>
+    <div class="card" style="margin-bottom:14px;">
+      <div style="font-size:13px;font-weight:700;margin-bottom:12px;">Split Scores 🏆</div>
+      <div id="ins-scores"></div>
+    </div>
+    <div class="card" id="ins-defaulter-card" style="margin-bottom:14px;display:none;">
+      <div style="font-size:13px;font-weight:700;margin-bottom:12px;">🐢 Hall of Shame</div>
+      <div id="ins-defaulters"></div>
+    </div>
+  </div>
+  <div class="bnav">
+    <button class="nb" onclick="tab('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></button>
+    <button class="nb" onclick="tab('groups')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Groups</span></button>
+    <button class="fab" onclick="nav('s-add-expense')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+    <button class="nb" onclick="tab('activity')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span>Activity</span></button>
+    <button class="nb on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>Insights</span></button>
+  </div>
+</div>
+
+<!-- ══════════════ PROFILE ══════════════ -->
+<div class="screen" id="s-profile">
+  <div class="topbar"><button class="back-row" onclick="goBack()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>Profile</button></div>
+  <div class="scroll" style="padding:0 16px 24px;">
+    <div class="card" style="text-align:center;margin-bottom:12px;">
+      <div id="prof-av" style="width:72px;height:72px;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;margin:0 auto 12px;background:var(--purple-dim);color:#A78BFA;"></div>
+      <div style="font-size:20px;font-weight:800;" id="prof-name">—</div>
+      <div style="font-size:13px;color:var(--txt3);margin-top:4px;" id="prof-upi">No UPI ID</div>
+    </div>
+    <div class="prem-banner" style="margin-bottom:12px;" onclick="toast('Premium coming soon! 🔥',true)">
+      <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24" style="color:var(--amber);flex-shrink:0;"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+      <div style="flex:1;"><div style="font-size:13px;font-weight:700;">Upgrade to Premium</div><div style="font-size:11px;color:var(--txt2);">Roast reminders · WhatsApp auto · Analytics</div></div>
+      <div style="font-size:11px;font-weight:700;color:var(--amber);">₹99/mo →</div>
+    </div>
+    <div class="card" style="margin-bottom:12px;">
+      <div class="set-row"><span>Name</span><span style="color:var(--txt2);font-size:13px;" id="s-name">—</span></div>
+      <div class="set-row"><span>UPI ID</span><span style="color:var(--txt2);font-size:13px;" id="s-upi">Not set</span></div>
+      <div class="set-row"><span>Phone</span><span style="color:var(--txt2);font-size:13px;" id="s-phone">Not set</span></div>
+      <div class="set-row" style="cursor:pointer;" onclick="goSetup()"><span style="color:var(--purple);">Edit Profile →</span></div>
+    </div>
+    <div class="card" style="margin-bottom:12px;">
+      <div class="set-row" style="cursor:pointer;" onclick="nav('s-add-person')"><span>Manage People</span><span style="color:var(--txt2);font-size:13px;" id="s-pcount">0</span></div>
+      <div class="set-row" style="cursor:pointer;" onclick="exportData()"><span>Export Data</span><span style="color:var(--txt2);font-size:13px;">JSON ↓</span></div>
+      <div class="set-row" style="cursor:pointer;" onclick="clearData()"><span style="color:var(--red);">Clear All Data</span></div>
+    </div>
+    <div style="text-align:center;color:var(--txt3);font-size:11px;padding:12px;">SplitSmart v2.0 · Made with 💜 for India</div>
+  </div>
+</div>
+
+<!-- ══════════════ ADD EXPENSE ══════════════ -->
+<div class="screen" id="s-add-expense">
+  <div class="topbar"><button class="back-row" onclick="goBack()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>Add Expense</button></div>
+  <div class="scroll" style="padding:0 16px 24px;">
+    <div class="fgrp">
+      <div class="amt-wrap"><span class="amt-prefix">₹</span><input class="finput amt-big" id="exp-amt" type="number" inputmode="decimal" placeholder="0" oninput="updateCustomSplit()"></div>
+    </div>
+    <div class="fgrp"><label class="flabel">What for?</label><input class="finput" id="exp-title" type="text" placeholder="Pizza, Petrol, Hotel, Movie..."></div>
+    <div class="fgrp"><label class="flabel">Category</label><div class="catg" id="cat-grid"></div></div>
+    <div class="fgrp"><label class="flabel">Paid by</label><select class="finput" id="exp-paidby"></select></div>
+    <div class="fgrp">
+      <label class="flabel">Split with</label>
+      <div id="exp-members"></div>
+      <div class="add-person-inline" onclick="openQuickAddPerson()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/><line x1="12" y1="21" x2="12" y2="15"/><line x1="9" y1="18" x2="15" y2="18"/></svg>
+        + Add new person quickly
+      </div>
+    </div>
+    <div class="fgrp"><label class="flabel">Split type</label>
+      <div class="stog">
+        <button class="sopt on" id="sopt-equal" onclick="setSplit('equal')">Equal</button>
+        <button class="sopt" id="sopt-custom" onclick="setSplit('custom')">Custom ₹</button>
+        <button class="sopt" id="sopt-pct" onclick="setSplit('pct')">Percent %</button>
+      </div>
+    </div>
+    <div id="custom-area" style="display:none;" class="fgrp">
+      <label class="flabel" id="custom-lbl">Custom amounts</label>
+      <div id="custom-rows"></div>
+      <div class="csrem" id="cs-rem"></div>
+    </div>
+    <div class="fgrp"><label class="flabel">Add to Group <span style="color:var(--txt3);text-transform:none;letter-spacing:0;font-weight:400;">(optional)</span></label><select class="finput" id="exp-group"><option value="">No group</option></select></div>
+    <div class="fgrp"><label class="flabel">Note <span style="color:var(--txt3);text-transform:none;letter-spacing:0;font-weight:400;">(optional)</span></label><input class="finput" id="exp-note" type="text" placeholder="Add a note..."></div>
+    <button class="btn btn-p" onclick="saveExpense()">Save Expense ✓</button>
+  </div>
+</div>
+
+<!-- ══════════════ PERSON DETAIL ══════════════ -->
+<div class="screen" id="s-person">
+  <div class="topbar"><button class="back-row" onclick="goBack()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg><span id="pd-name">Person</span></button>
+    <button class="icon-btn" onclick="openShare()" title="Share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>
+  </div>
+  <div class="scroll" style="padding:0 16px 24px;">
+    <div class="card" style="text-align:center;margin-bottom:12px;position:relative;overflow:hidden;">
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;"><div style="width:200px;height:200px;background:var(--purple-dim);border-radius:50%;filter:blur(60px);"></div></div>
+      <div style="position:relative;">
+        <div id="pd-av" class="av" style="width:64px;height:64px;border-radius:18px;font-size:22px;margin:0 auto 12px;"></div>
+        <div style="font-size:12px;color:var(--txt3);" id="pd-status">owes you</div>
+        <div id="pd-amt" style="font-size:42px;font-weight:800;letter-spacing:-1.5px;line-height:1;margin-top:4px;"></div>
+        <div id="pd-days" style="margin-top:8px;"></div>
+        <div id="pd-score" style="margin-top:6px;font-size:11px;color:var(--txt3);"></div>
+      </div>
+    </div>
+    <div id="upi-sec">
+      <div style="font-size:11px;color:var(--txt3);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Pay via UPI</div>
+      <div class="upi-grid">
+        <div class="upi-btn" onclick="payUPI('gpay')"><div class="upi-icon" style="background:rgba(66,133,244,0.15);color:#4285F4;font-weight:800;">G</div><div class="upi-lbl">Google Pay</div></div>
+        <div class="upi-btn" onclick="payUPI('phonepe')"><div class="upi-icon" style="background:rgba(99,91,255,0.15);color:#635BFF;font-weight:800;">P</div><div class="upi-lbl">PhonePe</div></div>
+        <div class="upi-btn" onclick="payUPI('paytm')"><div class="upi-icon" style="background:rgba(0,188,212,0.15);color:#00BCD4;font-weight:800;">B</div><div class="upi-lbl">Paytm</div></div>
+      </div>
+      <button class="btn btn-g" style="margin-bottom:8px;" onclick="payUPI('any')">💳 Pay ₹<span id="pd-pay-amt">0</span> Now</button>
+    </div>
+    <button class="btn btn-out" style="margin-bottom:8px;" onclick="openReminder()">🔔 Send Reminder</button>
+    <button class="btn btn-out" style="margin-bottom:16px;" id="settle-btn" onclick="settleUp()">✓ Mark as Settled</button>
+    <div style="font-size:11px;color:var(--txt3);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Shared Expenses</div>
+    <div id="pd-expenses"></div>
+  </div>
+</div>
+
+<!-- ══════════════ ADD PERSON ══════════════ -->
+<div class="screen" id="s-add-person">
+  <div class="topbar"><button class="back-row" onclick="goBack()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>People</button></div>
+  <div class="scroll" style="padding:0 16px 24px;">
+    <div class="card" style="margin-bottom:16px;">
+      <div style="font-size:14px;font-weight:700;margin-bottom:12px;">Add New Person</div>
+      <div class="fgrp"><label class="flabel">Name *</label><input class="finput" id="ap-name" type="text" placeholder="Rahul, Priya, Arjun..."></div>
+      <div class="fgrp"><label class="flabel">Phone <span style="color:var(--txt3);text-transform:none;letter-spacing:0;font-weight:400;">(for WhatsApp reminders)</span></label><input class="finput" id="ap-phone" type="tel" placeholder="10-digit number"></div>
+      <div class="fgrp" style="margin-bottom:0;"><label class="flabel">UPI ID <span style="color:var(--txt3);text-transform:none;letter-spacing:0;font-weight:400;">(for one-tap pay)</span></label><input class="finput" id="ap-upi" type="text" placeholder="name@upi or 9876543210@gpay"></div>
+      <button class="btn btn-p" style="margin-top:14px;" onclick="savePerson()">Add Person →</button>
+    </div>
+    <div style="font-size:11px;color:var(--txt3);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Saved People</div>
+    <div id="saved-people"></div>
+  </div>
+</div>
+
+<!-- ══════════════ CREATE GROUP ══════════════ -->
+<div class="screen" id="s-create-group">
+  <div class="topbar"><button class="back-row" onclick="goBack()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>New Group</button></div>
+  <div class="scroll" style="padding:0 16px 24px;">
+    <div class="fgrp"><label class="flabel">Group Name</label><input class="finput" id="grp-name" type="text" placeholder="Goa Trip, Flat 4B, Office Lunch..."></div>
+    <div class="fgrp"><label class="flabel">Type</label>
+      <div class="chips" id="grp-type-chips">
+        <button class="chip on" data-v="trip" onclick="selGrpType(this)">✈️ Trip</button>
+        <button class="chip" data-v="home" onclick="selGrpType(this)">🏠 Flat</button>
+        <button class="chip" data-v="friends" onclick="selGrpType(this)">👫 Friends</button>
+        <button class="chip" data-v="food" onclick="selGrpType(this)">🍽️ Food</button>
+        <button class="chip" data-v="other" onclick="selGrpType(this)">📦 Other</button>
+      </div>
+    </div>
+    <div class="fgrp"><label class="flabel">Add Members</label><div id="grp-members"></div></div>
+    <button class="btn btn-p" onclick="saveGroup()">Create Group →</button>
+  </div>
+</div>
+
+<!-- ══════════════ GROUP DETAIL ══════════════ -->
+<div class="screen" id="s-group-detail">
+  <div class="topbar"><button class="back-row" onclick="goBack()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg><span id="gd-name">Group</span></button>
+    <button class="icon-btn" onclick="addExpToGroup()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+  </div>
+  <div class="scroll" style="padding:0 16px 24px;">
+    <div class="card" style="margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div id="gd-emoji" style="font-size:32px;"></div>
+        <div style="text-align:right;"><div style="font-size:11px;color:var(--txt3);">Total spent</div><div style="font-size:24px;font-weight:800;" id="gd-total">₹0</div></div>
+      </div>
+      <div style="font-size:11px;color:var(--txt3);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Who pays whom</div>
+      <div id="gd-settlements"></div>
+    </div>
+    <div style="font-size:11px;color:var(--txt3);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Member Balances</div>
+    <div id="gd-balances" style="margin-bottom:14px;display:flex;flex-direction:column;gap:6px;"></div>
+    <div style="font-size:11px;color:var(--txt3);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Expenses</div>
+    <div id="gd-expenses"></div>
+  </div>
+</div>
+
+<!-- ══════════════ MODAL: REMINDER ══════════════ -->
+<div class="overlay" id="m-reminder" onclick="closeOverlayOutside(event,'m-reminder')">
+  <div class="sheet">
+    <div class="handle"></div>
+    <div class="sheet-title">Send Reminder 🔔</div>
+    <div style="font-size:13px;color:var(--txt2);margin-bottom:12px;">To: <strong id="rem-to" style="color:var(--txt);">—</strong></div>
+    <div id="rem-cards"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+      <button class="btn btn-p" onclick="sendRemWhatsApp()">WhatsApp 💬</button>
+      <button class="btn btn-out" onclick="copyRem()">Copy 📋</button>
+    </div>
+    <button class="btn btn-out" style="margin-top:8px;" onclick="closeOverlay('m-reminder')">Cancel</button>
+  </div>
+</div>
+
+<!-- ══════════════ MODAL: SHARE / ROAST CARD ══════════════ -->
+<div class="overlay" id="m-share" onclick="closeOverlayOutside(event,'m-share')">
+  <div class="sheet">
+    <div class="handle"></div>
+    <div class="sheet-title">Share Summary</div>
+    <div class="share-card" id="share-card">
+      <div class="share-app-name">SplitSmart</div>
+      <div style="font-size:12px;color:var(--txt3);margin-bottom:6px;" id="sc-label">Balance with —</div>
+      <div style="font-size:38px;font-weight:800;letter-spacing:-1px;" id="sc-amt">₹0</div>
+      <div style="font-size:13px;color:var(--txt2);margin-top:4px;" id="sc-caption"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:12px;border-top:0.5px solid var(--border);">
+        <div style="font-size:11px;color:var(--txt3);" id="sc-footer"></div>
+        <div style="font-size:10px;color:var(--txt3);">splitsmart.app</div>
+      </div>
+    </div>
+    <button class="btn btn-p" style="margin-top:12px;" onclick="doShare()">Share 🚀</button>
+    <button class="btn btn-out" style="margin-top:8px;" onclick="closeOverlay('m-share')">Close</button>
+  </div>
+</div>
+
+<!-- ══════════════ MODAL: QUICK ADD PERSON ══════════════ -->
+<div class="overlay" id="m-quick-person" onclick="closeOverlayOutside(event,'m-quick-person')">
+  <div class="sheet">
+    <div class="handle"></div>
+    <div class="sheet-title">Quick Add Person</div>
+    <div class="fgrp"><label class="flabel">Name *</label><input class="finput" id="qp-name" type="text" placeholder="Rahul, Priya..."></div>
+    <div class="fgrp"><label class="flabel">Phone</label><input class="finput" id="qp-phone" type="tel" placeholder="10-digit (optional)"></div>
+    <div class="fgrp" style="margin-bottom:0;"><label class="flabel">UPI ID</label><input class="finput" id="qp-upi" type="text" placeholder="name@upi (optional)"></div>
+    <button class="btn btn-p" style="margin-top:14px;" onclick="saveQuickPerson()">Add Person →</button>
+    <button class="btn btn-out" style="margin-top:8px;" onclick="closeOverlay('m-quick-person')">Cancel</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════
+const S = {
+  g: k => { try { return JSON.parse(localStorage.getItem('ss2_'+k)) } catch(e) { return null } },
+  s: (k,v) => localStorage.setItem('ss2_'+k, JSON.stringify(v)),
+  ga: k => S.g(k) || [],
+};
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+const getMe = () => S.g('me');
+const getPeople = () => S.ga('people');
+const getGroups = () => S.ga('groups');
+const getExpenses = () => S.ga('expenses');
+
+// ═══════════════════════════════════════
+// NAVIGATION — back button safe
+// ═══════════════════════════════════════
+let navStack = [];
+let currentGroupId = null;
+let currentPersonId = null;
+let pendingExpenseGroupId = null;
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById(id);
+  if (el) el.classList.add('active');
+  // Scroll to top
+  const scroll = el && el.querySelector('.scroll');
+  if (scroll) scroll.scrollTop = 0;
+}
+
+function nav(id) {
+  const cur = document.querySelector('.screen.active');
+  if (cur) navStack.push(cur.id);
+  showScreen(id);
+  onNavTo(id);
+}
+
+function goBack() {
+  if (navStack.length > 0) {
+    const prev = navStack.pop();
+    showScreen(prev);
+    onNavTo(prev);
+  } else {
+    tab('home');
+  }
+}
+
+function tab(name) {
+  navStack = [];
+  const map = { home:'s-home', groups:'s-groups', activity:'s-activity', insights:'s-insights' };
+  if (map[name]) showScreen(map[name]);
+  onNavTo(map[name] || name);
+  // Update nav active state
+  document.querySelectorAll('.nb').forEach(b => b.classList.remove('on'));
+  const nbId = 'nb-' + name;
+  const nb = document.getElementById(nbId);
+  if (nb) nb.classList.add('on');
+}
+
+function onNavTo(id) {
+  if (id === 's-home') renderDash();
+  else if (id === 's-groups') renderGroups();
+  else if (id === 's-activity') renderActivity();
+  else if (id === 's-insights') renderInsights();
+  else if (id === 's-profile') renderProfile();
+  else if (id === 's-add-expense') setupAddExpense();
+  else if (id === 's-add-person') renderSavedPeople();
+  else if (id === 's-create-group') setupCreateGroup();
+}
+
+// Android back button bridge
+window.androidBackPressed = function() {
+  // Check open modal
+  const openModal = document.querySelector('.overlay.open');
+  if (openModal) { openModal.classList.remove('open'); return 'true'; }
+  // Check nav stack
+  if (navStack.length > 0) { goBack(); return 'true'; }
+  return 'false';
+};
+
+// ═══════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════
+const AV_COLORS = ['av-g','av-r','av-p','av-a','av-b','av-t'];
+function avColor(id) {
+  let h = 0;
+  for (let c of (id||'')) h = c.charCodeAt(0) + ((h<<5)-h);
+  return AV_COLORS[Math.abs(h) % AV_COLORS.length];
+}
+function initials(name) {
+  if (!name) return '?';
+  return name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+}
+function fmt(n) {
+  const a = Math.abs(n||0);
+  if (a >= 100000) return '₹' + (a/100000).toFixed(1) + 'L';
+  if (a >= 1000) return '₹' + (a/1000).toFixed(1) + 'K';
+  return '₹' + a.toFixed(0);
+}
+function daysSince(ts) { return Math.floor((Date.now()-ts)/86400000); }
+function getPersonById(id) {
+  const me = getMe();
+  if (me && me.id === id) return me;
+  return getPeople().find(p=>p.id===id);
+}
+
+// ═══════════════════════════════════════
+// ONBOARDING
+// ═══════════════════════════════════════
+let oStep = 0;
+function onboardNext() {
+  const slides = ['oslide-0','oslide-1','oslide-2'];
+  const dots = ['od0','od1','od2'];
+  document.getElementById(slides[oStep]).style.display = 'none';
+  document.getElementById(dots[oStep]).style.cssText = 'width:6px;height:5px;border-radius:3px;background:var(--bg4);';
+  if (oStep < 2) {
+    oStep++;
+    document.getElementById(slides[oStep]).style.display = 'flex';
+    document.getElementById(dots[oStep]).style.cssText = 'width:20px;height:5px;border-radius:3px;background:var(--purple);';
+    if (oStep === 2) document.getElementById('onext-btn').textContent = "Start Splitting! →";
+  } else {
+    goSetup();
+  }
+}
+function goSetup() {
+  const me = getMe();
+  if (me) {
+    document.getElementById('setup-name').value = me.name||'';
+    document.getElementById('setup-upi').value = me.upiId||'';
+    document.getElementById('setup-phone').value = me.phone||'';
+  }
+  showScreen('s-setup');
+}
+function saveSetup() {
+  const name = document.getElementById('setup-name').value.trim();
+  if (!name) { toast('Enter your name', false); return; }
+  const upiId = document.getElementById('setup-upi').value.trim();
+  const phone = document.getElementById('setup-phone').value.trim();
+  const ex = getMe();
+  S.s('me', { id: ex?.id||uid(), name, upiId, phone, isMe:true, createdAt: ex?.createdAt||Date.now() });
+  S.s('setup_done', true);
+  navStack = [];
+  showScreen('s-home');
+  renderDash();
+  toast('Welcome, ' + name + '! 🎉', true);
+}
+
+// ═══════════════════════════════════════
+// BALANCE CALCULATION
+// ═══════════════════════════════════════
+function calcBalances() {
+  const me = getMe();
+  if (!me) return {};
+  const bal = {};
+  getExpenses().forEach(exp => {
+    if (!exp.splits) return;
+    exp.splits.forEach(split => {
+      if (split.settled) return;
+      if (exp.paidById === me.id && split.userId !== me.id) {
+        bal[split.userId] = (bal[split.userId]||0) + split.amount;
+      } else if (split.userId === me.id && exp.paidById !== me.id) {
+        bal[exp.paidById] = (bal[exp.paidById]||0) - split.amount;
+      }
+    });
+  });
+  return bal;
+}
+
+function getOldestPending(personId) {
+  const me = getMe();
+  if (!me) return null;
+  let oldest = null;
+  getExpenses().forEach(exp => {
+    if (!exp.splits) return;
+    const rel = exp.splits.some(s => !s.settled && (
+      (exp.paidById===me.id && s.userId===personId) ||
+      (exp.paidById===personId && s.userId===me.id)
+    ));
+    if (rel && (!oldest || exp.createdAt < oldest)) oldest = exp.createdAt;
+  });
+  return oldest;
+}
+
+function getSharedExps(personId) {
+  const me = getMe();
+  if (!me) return [];
+  return getExpenses().filter(exp => {
+    if (!exp.splits) return false;
+    const mIn = exp.paidById===me.id || exp.splits.some(s=>s.userId===me.id);
+    const pIn = exp.paidById===personId || exp.splits.some(s=>s.userId===personId);
+    return mIn && pIn;
+  }).sort((a,b)=>b.createdAt-a.createdAt);
+}
+
+// ═══════════════════════════════════════
+// SPLIT SCORE (viral)
+// ═══════════════════════════════════════
+function getSplitScore(personId) {
+  const expenses = getExpenses();
+  const splits = [];
+  expenses.forEach(exp => {
+    if (!exp.splits) return;
+    exp.splits.forEach(s => {
+      if (s.userId === personId) splits.push({ ...s, createdAt: exp.createdAt });
+    });
+  });
+  if (!splits.length) return 50;
+  const settled = splits.filter(s=>s.settled);
+  if (!settled.length) return Math.max(10, 50 - splits.length * 5);
+  const avgDays = settled.reduce((a,s) => {
+    const days = s.settledAt ? daysSince(s.createdAt - (s.settledAt - s.createdAt)) : 10;
+    return a + Math.min(days, 30);
+  }, 0) / settled.length;
+  const settleRate = settled.length / splits.length;
+  const score = Math.round(settleRate * 70 + Math.max(0, 30 - avgDays));
+  return Math.max(5, Math.min(100, score));
+}
+
+function scoreLabel(score) {
+  if (score >= 80) return { label:'💎 Legend', color:'var(--green)' };
+  if (score >= 60) return { label:'👍 Reliable', color:'var(--blue)' };
+  if (score >= 40) return { label:'😐 Average', color:'var(--amber)' };
+  if (score >= 20) return { label:'🐢 Slow Payer', color:'var(--red)' };
+  return { label:'💀 Chronic Defaulter', color:'var(--red)' };
+}
+
+// ═══════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════
+function renderDash() {
+  const me = getMe();
+  if (!me) return;
+  document.getElementById('dash-hey').textContent = me.name.split(' ')[0];
+
+  const bal = calcBalances();
+  let totalGet = 0, totalOwe = 0;
+  Object.values(bal).forEach(v => { if (v>0) totalGet+=v; else totalOwe+=Math.abs(v); });
+
+  document.getElementById('h-get').textContent = fmt(totalGet);
+  document.getElementById('h-owe').textContent = fmt(totalOwe);
+  const pct = (totalGet+totalOwe) > 0 ? (totalGet/(totalGet+totalOwe))*100 : 50;
+  document.getElementById('netbar').style.width = pct + '%';
+
+  const people = getPeople();
+  const qab = document.getElementById('quick-add-btn');
+  const allIds = [...new Set([...Object.keys(bal), ...people.map(p=>p.id)])];
+
+  if (people.length === 0) {
+    qab.style.display = 'flex';
+    document.getElementById('dash-list').innerHTML = '';
+    document.getElementById('dash-empty').style.display = 'none';
+    return;
+  }
+  qab.style.display = 'none';
+
+  if (allIds.length === 0) {
+    document.getElementById('dash-list').innerHTML = '';
+    document.getElementById('dash-empty').style.display = 'block';
+    return;
+  }
+  document.getElementById('dash-empty').style.display = 'none';
+
+  document.getElementById('dash-list').innerHTML = allIds.map(pid => {
+    const p = getPersonById(pid);
+    if (!p) return '';
+    const net = bal[pid]||0;
+    const ts = getOldestPending(pid);
+    const days = ts ? daysSince(ts) : 0;
+    const isDefaulter = net > 0 && days >= 7;
+    const ini = initials(p.name);
+    const col = avColor(pid);
+    let amtHtml = '<span class="amt-s">Settled</span>';
+    if (net>0) amtHtml = `<span class="amt-g">${fmt(net)}</span>`;
+    else if (net<0) amtHtml = `<span class="amt-r">${fmt(net)}</span>`;
+    const daysBadge = (days>0 && net!==0) ? `<span class="badge-days">${days}d</span>` : '';
+    const defBadge = isDefaulter ? `<span class="badge-def">🐢 Defaulter</span>` : '';
+    return `<div class="prow fade-in" onclick="openPerson('${pid}')">
+      <div class="av ${col}">${ini}</div>
+      <div class="pinfo">
+        <div class="pname">${p.name} ${defBadge}</div>
+        <div class="psub">${daysBadge}${net>0?' owes you':net<0?' you owe':' settled'}</div>
+      </div>
+      <div style="text-align:right;">${amtHtml}</div>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--txt3)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════
+// ADD EXPENSE
+// ═══════════════════════════════════════
+const CATS = [
+  {id:'food',e:'🍕',l:'Food'},{id:'travel',e:'✈️',l:'Travel'},{id:'hotel',e:'🏨',l:'Hotel'},
+  {id:'petrol',e:'⛽',l:'Petrol'},{id:'grocery',e:'🛒',l:'Grocery'},{id:'movie',e:'🎬',l:'Movie'},
+  {id:'party',e:'🎉',l:'Party'},{id:'medical',e:'💊',l:'Medical'},{id:'rent',e:'🏠',l:'Rent'},{id:'other',e:'📦',l:'Other'}
+];
+const GT_EMOJIS = {trip:'✈️',home:'🏠',friends:'👫',food:'🍽️',other:'📦'};
+let selCat = 'food';
+let splitType = 'equal';
+
+function setupAddExpense() {
+  const me = getMe();
+  const people = getPeople();
+  const allPeople = me ? [me, ...people] : people;
+  selCat = 'food'; splitType = 'equal';
+
+  // Categories
+  document.getElementById('cat-grid').innerHTML = CATS.map(c =>
+    `<div class="cati ${c.id===selCat?'on':''}" onclick="selCatFn('${c.id}',this)">
+      <div class="caticon">${c.e}</div>
+      <div class="catlbl">${c.l}</div>
+    </div>`
+  ).join('');
+
+  // Paid by
+  document.getElementById('exp-paidby').innerHTML = allPeople.map(p =>
+    `<option value="${p.id}" ${p.isMe?'selected':''}>${p.name}${p.isMe?' (you)':''}</option>`
+  ).join('');
+
+  // Members (all non-me checked by default)
+  renderMemberChecks('exp-members', allPeople, people.map(p=>p.id));
+
+  // Groups
+  document.getElementById('exp-group').innerHTML = '<option value="">No group</option>' +
+    getGroups().map(g => `<option value="${g.id}" ${g.id===pendingExpenseGroupId?'selected':''}>${g.emoji} ${g.name}</option>`).join('');
+
+  // Reset
+  document.getElementById('exp-amt').value = '';
+  document.getElementById('exp-title').value = '';
+  document.getElementById('exp-note').value = '';
+  document.getElementById('custom-area').style.display = 'none';
+  document.querySelectorAll('.sopt').forEach(o=>o.classList.remove('on'));
+  document.getElementById('sopt-equal').classList.add('on');
+}
+
+function renderMemberChecks(containerId, people, checkedIds) {
+  document.getElementById(containerId).innerHTML = people.map(p =>
+    `<div class="mcheck ${checkedIds.includes(p.id)?'on':''}" onclick="toggleMember(this)">
+      <div class="chkbox"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="2 6 5 9 10 3"/></svg></div>
+      <div class="av ${avColor(p.id)}" style="width:32px;height:32px;border-radius:10px;font-size:11px;">${initials(p.name)}</div>
+      <span style="font-size:13px;font-weight:500;" data-id="${p.id}">${p.name}${p.isMe?' (you)':''}</span>
+    </div>`
+  ).join('');
+}
+
+function toggleMember(el) {
+  el.classList.toggle('on');
+  updateCustomSplit();
+}
+
+function getCheckedIds(containerId) {
+  return [...document.querySelectorAll(`#${containerId} .mcheck.on`)].map(el => el.querySelector('[data-id]').dataset.id);
+}
+
+function selCatFn(id, el) {
+  selCat = id;
+  document.querySelectorAll('.cati').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+}
+
+function setSplit(type) {
+  splitType = type;
+  document.querySelectorAll('.sopt').forEach(o=>o.classList.remove('on'));
+  document.getElementById('sopt-'+type).classList.add('on');
+  if (type !== 'equal') {
+    document.getElementById('custom-area').style.display = 'block';
+    document.getElementById('custom-lbl').textContent = type === 'pct' ? 'Percentages (must total 100%)' : 'Custom amounts';
+    updateCustomSplit();
+  } else {
+    document.getElementById('custom-area').style.display = 'none';
+  }
+}
+
+function updateCustomSplit() {
+  if (splitType === 'equal') return;
+  const amt = parseFloat(document.getElementById('exp-amt').value)||0;
+  const ids = getCheckedIds('exp-members');
+  const rows = document.getElementById('custom-rows');
+  rows.innerHTML = ids.map(id => {
+    const p = getPersonById(id);
+    if (!p) return '';
+    const def = splitType==='pct' ? (ids.length?+(100/ids.length).toFixed(1):0) : (ids.length?+(amt/ids.length).toFixed(2):0);
+    return `<div class="csrow">
+      <div class="csname">${p.name}</div>
+      <input class="csinput" id="cs-${id}" type="number" inputmode="decimal" value="${def}" oninput="validateSplit()">
+      <span style="font-size:12px;color:var(--txt3);">${splitType==='pct'?'%':'₹'}</span>
+    </div>`;
+  }).join('');
+  validateSplit();
+}
+
+function validateSplit() {
+  const ids = getCheckedIds('exp-members');
+  const amt = parseFloat(document.getElementById('exp-amt').value)||0;
+  let total = 0;
+  ids.forEach(id => { const el = document.getElementById('cs-'+id); if(el) total += parseFloat(el.value)||0; });
+  const rem = document.getElementById('cs-rem');
+  if (splitType==='pct') {
+    const diff = 100-total;
+    rem.textContent = diff===0 ? '✓ Totals 100%' : (diff>0 ? diff.toFixed(1)+'% remaining' : 'Over by '+Math.abs(diff).toFixed(1)+'%');
+    rem.style.cssText = `border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;text-align:center;margin-top:4px;background:${diff===0?'rgba(0,230,118,.1)':'rgba(255,69,105,.1)'};color:${diff===0?'var(--green)':'var(--red)'};`;
+  } else {
+    const diff = amt-total;
+    rem.textContent = diff===0 ? '✓ Fully allocated' : (diff>0 ? '₹'+diff.toFixed(2)+' remaining' : 'Over by ₹'+Math.abs(diff).toFixed(2));
+    rem.style.cssText = `border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;text-align:center;margin-top:4px;background:${diff===0?'rgba(0,230,118,.1)':'rgba(255,69,105,.1)'};color:${diff===0?'var(--green)':'var(--red)'};`;
+  }
+}
+
+function saveExpense() {
+  const amt = parseFloat(document.getElementById('exp-amt').value);
+  const title = document.getElementById('exp-title').value.trim();
+  const paidById = document.getElementById('exp-paidby').value;
+  const members = getCheckedIds('exp-members');
+  const groupId = document.getElementById('exp-group').value||null;
+  const note = document.getElementById('exp-note').value.trim();
+  if (!amt||amt<=0) { toast('Enter a valid amount', false); return; }
+  if (!title) { toast('What is this expense for?', false); return; }
+  if (!members.length) { toast('Select at least one person', false); return; }
+
+  let splits = [];
+  const catObj = CATS.find(c=>c.id===selCat);
+
+  if (splitType==='equal') {
+    const pp = amt/members.length;
+    splits = members.map((id,i) => ({
+      userId:id, settled:false,
+      amount: i===members.length-1 ? Math.round((amt-pp*(members.length-1))*100)/100 : Math.round(pp*100)/100
+    }));
+  } else if (splitType==='custom') {
+    let total = 0;
+    splits = members.map(id => { const v=parseFloat(document.getElementById('cs-'+id)?.value)||0; total+=v; return {userId:id,amount:v,settled:false}; });
+    if (Math.abs(total-amt)>0.02) { toast('Amounts must equal ₹'+amt, false); return; }
+  } else {
+    let total = 0;
+    splits = members.map(id => { const p=parseFloat(document.getElementById('cs-'+id)?.value)||0; total+=p; return {userId:id,amount:Math.round(amt*p/100*100)/100,settled:false}; });
+    if (Math.abs(total-100)>0.1) { toast('Percentages must total 100%', false); return; }
+  }
+
+  const exp = { id:uid(), title, totalAmount:amt, paidById, groupId, category:selCat, catIcon:catObj?.e||'📦', splitType, splits, note, createdAt:Date.now() };
+  const exps = getExpenses();
+  exps.push(exp);
+  S.s('expenses', exps);
+  pendingExpenseGroupId = null;
+  goBack();
+  toast('Expense saved! 💸', true);
+}
+
+// ═══════════════════════════════════════
+// PERSON DETAIL
+// ═══════════════════════════════════════
+function openPerson(personId) {
+  currentPersonId = personId;
+  const p = getPersonById(personId);
+  const bal = calcBalances();
+  const net = bal[personId]||0;
+  const ts = getOldestPending(personId);
+  const days = ts ? daysSince(ts) : 0;
+
+  document.getElementById('pd-name').textContent = p.name;
+  const av = document.getElementById('pd-av');
+  av.textContent = initials(p.name);
+  av.className = 'av ' + avColor(personId);
+
+  const amtEl = document.getElementById('pd-amt');
+  const statusEl = document.getElementById('pd-status');
+  const upiSec = document.getElementById('upi-sec');
+  const settleBtn = document.getElementById('settle-btn');
+
+  amtEl.textContent = fmt(Math.abs(net));
+  if (net > 0) {
+    amtEl.style.color = 'var(--green)';
+    statusEl.textContent = p.name + ' owes you';
+    upiSec.style.display = 'none';
+    settleBtn.style.display = 'block';
+    document.getElementById('pd-pay-amt').textContent = net.toFixed(0);
+  } else if (net < 0) {
+    amtEl.style.color = 'var(--red)';
+    statusEl.textContent = 'you owe ' + p.name;
+    upiSec.style.display = 'block';
+    settleBtn.style.display = 'none';
+    document.getElementById('pd-pay-amt').textContent = Math.abs(net).toFixed(0);
+  } else {
+    amtEl.style.color = 'var(--txt3)';
+    amtEl.textContent = '₹0';
+    statusEl.textContent = 'all settled up! 🎉';
+    upiSec.style.display = 'none';
+    settleBtn.style.display = 'none';
+  }
+
+  const daysEl = document.getElementById('pd-days');
+  if (days > 0 && net !== 0) {
+    daysEl.innerHTML = `<span class="badge-days">Pending ${days} day${days!==1?'s':''}</span>`;
+  } else { daysEl.innerHTML = ''; }
+
+  // Split score
+  const score = getSplitScore(personId);
+  const sl = scoreLabel(score);
+  document.getElementById('pd-score').innerHTML = `Split Score: <strong style="color:${sl.color};">${score}/100 ${sl.label}</strong>`;
+
+  // Shared expenses
+  const sharedExps = getSharedExps(personId);
+  const me = getMe();
+  document.getElementById('pd-expenses').innerHTML = sharedExps.length === 0
+    ? `<div style="color:var(--txt3);font-size:13px;text-align:center;padding:16px;">No shared expenses yet</div>`
+    : sharedExps.slice(0,10).map(exp => {
+        const youPaid = exp.paidById === me?.id;
+        const split = exp.splits?.find(s=>s.userId===(youPaid?personId:me?.id));
+        return `<div class="exp-item">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:34px;height:34px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">${exp.catIcon||'📦'}</div>
+            <div>
+              <div style="font-size:13px;font-weight:600;">${exp.title}</div>
+              <div style="font-size:11px;color:var(--txt3);">${youPaid?'You paid':'They paid'} · ${new Date(exp.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</div>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:14px;font-weight:700;color:${youPaid?'var(--green)':'var(--red)'};">${fmt(exp.totalAmount)}</div>
+            <div style="font-size:10px;color:var(--txt3);">split: ${fmt(split?.amount||0)}</div>
+          </div>
+        </div>`;
+      }).join('');
+
+  nav('s-person');
+}
+
+function settleUp() {
+  const me = getMe();
+  if (!me||!currentPersonId) return;
+  const exps = getExpenses();
+  exps.forEach(exp => {
+    if (!exp.splits) return;
+    exp.splits.forEach(s => {
+      if (exp.paidById===me.id && s.userId===currentPersonId) { s.settled=true; s.settledAt=Date.now(); }
+      if (exp.paidById===currentPersonId && s.userId===me.id) { s.settled=true; s.settledAt=Date.now(); }
+    });
+  });
+  S.s('expenses', exps);
+  showConfetti();
+  toast('All settled! 🎊', true);
+  openPerson(currentPersonId);
+  renderDash();
+}
+
+// ═══════════════════════════════════════
+// UPI
+// ═══════════════════════════════════════
+function payUPI(app) {
+  const p = getPersonById(currentPersonId);
+  const bal = calcBalances();
+  const net = Math.abs(bal[currentPersonId]||0);
+  if (!p?.upiId) { toast("Add "+p?.name+"'s UPI ID first — go to People", false); return; }
+  const upi = encodeURIComponent(p.upiId);
+  const name = encodeURIComponent(p.name);
+  const amt = net.toFixed(2);
+  const note = encodeURIComponent('SplitSmart payment');
+  const base = `upi://pay?pa=${upi}&pn=${name}&am=${amt}&cu=INR&tn=${note}`;
+  const intents = {
+    gpay: `intent://pay?pa=${upi}&pn=${name}&am=${amt}&cu=INR&tn=${note}#Intent;scheme=gpay;package=com.google.android.apps.nbu.paisa.user;end`,
+    phonepe: `intent://pay?pa=${upi}&pn=${name}&am=${amt}&cu=INR&tn=${note}#Intent;scheme=phonepe;package=com.phonepe.app;end`,
+    paytm: `intent://pay?pa=${upi}&pn=${name}&am=${amt}&cu=INR&tn=${note}#Intent;scheme=paytmmp;package=net.one97.paytm;end`,
+    any: base
+  };
+  window.location.href = intents[app]||base;
+  setTimeout(() => { window.location.href = base; }, 600);
+}
+
+// ═══════════════════════════════════════
+// REMINDERS — Viral Hinglish templates
+// ═══════════════════════════════════════
+const REMINDER_TEMPLATES = {
+  friendly: [
+    "Hey {name}! 😊 Bas ek chota sa reminder — ₹{amount} for {days} days pending hai. Koi rush nahi, send kar jab time mile!",
+    "Bhai {name}, ₹{amount} yaad hai na? 😅 No stress, jab bhi convenient ho!",
+    "Hi {name}! 🙏 ₹{amount} still pending since {days} days. Would really appreciate if you could settle soon!"
+  ],
+  serious: [
+    "Hi {name}, this is a reminder that ₹{amount} has been pending for {days} days. Please arrange payment at your earliest convenience.",
+    "Reminder: {name}, ₹{amount} outstanding for {days} days. Kindly settle the amount soon.",
+    "Dear {name}, payment of ₹{amount} is due since {days} days. Please complete at the earliest."
+  ],
+  savage: [
+    "Bhai {name}! ₹{amount} ke liye {days} din ho gaye 😤 Paisa bhool gaya kya? Main tumhara bank nahi hoon!",
+    "{name} bro ₹{amount} return kab karega? {days} din ho gaye yaar. UPI ID bhej ya dushman ban ja ✂️",
+    "Reminder #{days}: {name} ne ₹{amount} dena hai. Ye last warning hai mere bhai 💀⏰",
+    "₹{amount} pending since {days} days 😈 {name} bhai... kabhi to shukar karo. PAY. KAR. AB."
+  ],
+  roast: [
+    "Abe {name}! ₹{amount} ke liye {days} din ho gaye. Teri maa ka phone aaya tha, usne bhi poocha kab dega 😂 UPI: {myupi}",
+    "BREAKING NEWS: {name} ne {days} din pehle ₹{amount} liya tha. Aaj bhi dene ka mood nahi 📰 Paisa dega ya court mein milte hain?",
+    "{name} bhai, ₹{amount} ke liye {days} din intezaar kiya. Abhi toh mere sabar ka glass full ho gaya hai 🥛💢 PAY NOW: {myupi}",
+    "Certified defaulter 🏆 {name} — ₹{amount} — {days} days — zero guilt 😂 Beta, friendship ka price ₹{amount} se zyada hai ya nahi?"
+  ]
+};
+
+let selTone = 'friendly';
+let genMsg = '';
+
+function openReminder() {
+  const p = getPersonById(currentPersonId);
+  const bal = calcBalances();
+  const net = bal[currentPersonId]||0;
+  const ts = getOldestPending(currentPersonId);
+  const days = ts ? daysSince(ts) : 1;
+  const amt = Math.abs(net).toFixed(0);
+  const me = getMe();
+  const myupi = me?.upiId || 'your_upi_id';
+
+  document.getElementById('rem-to').textContent = p?.name||'Friend';
+  selTone = 'friendly';
+
+  function gen(tone) {
+    const templates = REMINDER_TEMPLATES[tone];
+    return templates[Math.floor(Math.random()*templates.length)]
+      .replace(/{name}/g, p?.name||'Friend')
+      .replace(/{amount}/g, amt)
+      .replace(/{days}/g, days)
+      .replace(/{myupi}/g, myupi);
+  }
+
+  genMsg = gen('friendly');
+
+  document.getElementById('rem-cards').innerHTML = ['friendly','serious','savage','roast'].map((tone,i) => {
+    const msg = gen(tone);
+    const labels = { friendly:'😊 Friendly', serious:'😐 Serious', savage:'😈 Savage', roast:'🔥 Roast (Viral)' };
+    const cls = { friendly:'tf', serious:'ts2', savage:'tsav', roast:'tro' };
+    return `<div class="rcard ${tone} ${tone==='friendly'?'on':''}" id="rc-${tone}" onclick="selToneFn('${tone}','${msg.replace(/'/g,"\\'").replace(/\n/g,' ')}')">
+      <div class="rtone ${cls[tone]}">${labels[tone]}${tone==='roast'?'<span class="prem-lock">VIRAL</span>':''}</div>
+      <div class="rmsg">"${msg}"</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('m-reminder').classList.add('open');
+}
+
+function selToneFn(tone, msg) {
+  selTone = tone;
+  genMsg = msg;
+  document.querySelectorAll('.rcard').forEach(c=>c.classList.remove('on'));
+  document.getElementById('rc-'+tone)?.classList.add('on');
+}
+
+function sendRemWhatsApp() {
+  const p = getPersonById(currentPersonId);
+  const phone = p?.phone?.replace(/\D/g,'');
+  const url = phone
+    ? `https://wa.me/91${phone}?text=${encodeURIComponent(genMsg)}`
+    : `https://wa.me/?text=${encodeURIComponent(genMsg)}`;
+  window.open(url, '_blank');
+  closeOverlay('m-reminder');
+  toast('Opening WhatsApp... 💬', true);
+}
+
+function copyRem() {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(genMsg).then(() => toast('Copied! 📋', true));
+  } else {
+    const t = document.createElement('textarea');
+    t.value = genMsg;
+    document.body.appendChild(t);
+    t.select();
+    document.execCommand('copy');
+    document.body.removeChild(t);
+    toast('Copied! 📋', true);
+  }
+  closeOverlay('m-reminder');
+}
+
+// ═══════════════════════════════════════
+// SHARE / ROAST CARD
+// ═══════════════════════════════════════
+function openShare() {
+  if (!currentPersonId) return;
+  const p = getPersonById(currentPersonId);
+  const bal = calcBalances();
+  const net = bal[currentPersonId]||0;
+  const shared = getSharedExps(currentPersonId);
+  document.getElementById('sc-label').textContent = 'Balance with ' + p?.name;
+  document.getElementById('sc-amt').textContent = fmt(Math.abs(net));
+  document.getElementById('sc-amt').style.color = net>0?'var(--green)':net<0?'var(--red)':'var(--txt3)';
+  document.getElementById('sc-caption').textContent = net>0?p?.name+' owes you':net<0?'You owe '+p?.name:'All settled up! 🎊';
+  document.getElementById('sc-footer').textContent = shared.length + ' shared expense' + (shared.length!==1?'s':'');
+  document.getElementById('m-share').classList.add('open');
+}
+
+function doShare() {
+  const p = getPersonById(currentPersonId);
+  const bal = calcBalances();
+  const net = bal[currentPersonId]||0;
+  const text = `SplitSmart — Balance with ${p?.name}\n${net>0?'They owe me':'I owe them'}: ₹${Math.abs(net).toFixed(0)}\n\nTrack splits easily on SplitSmart 💸`;
+  if (navigator.share) {
+    navigator.share({ title:'SplitSmart', text }).catch(()=>{});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(()=>toast('Summary copied! 📋', true));
+  }
+  closeOverlay('m-share');
+}
+
+// ═══════════════════════════════════════
+// PEOPLE MANAGEMENT
+// ═══════════════════════════════════════
+function savePerson() {
+  const name = document.getElementById('ap-name').value.trim();
+  if (!name) { toast('Enter a name', false); return; }
+  const phone = document.getElementById('ap-phone').value.trim();
+  const upiId = document.getElementById('ap-upi').value.trim();
+  const people = getPeople();
+  people.push({ id:uid(), name, phone, upiId, createdAt:Date.now() });
+  S.s('people', people);
+  document.getElementById('ap-name').value = '';
+  document.getElementById('ap-phone').value = '';
+  document.getElementById('ap-upi').value = '';
+  toast(name + ' added! 👤', true);
+  renderSavedPeople();
+}
+
+function renderSavedPeople() {
+  const people = getPeople();
+  document.getElementById('saved-people').innerHTML = people.length===0
+    ? `<div style="color:var(--txt3);font-size:13px;padding:8px 0;">No people yet — add someone above</div>`
+    : people.map(p => `
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border);">
+        <div class="av ${avColor(p.id)}" style="width:36px;height:36px;border-radius:11px;font-size:12px;">${initials(p.name)}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:600;">${p.name}</div>
+          <div style="font-size:11px;color:var(--txt3);">${p.upiId||p.phone||'No UPI / phone'}</div>
+        </div>
+        <button onclick="delPerson('${p.id}')" style="background:none;border:none;color:var(--red);font-size:20px;cursor:pointer;padding:4px 8px;line-height:1;">×</button>
+      </div>`).join('');
+}
+
+function delPerson(id) {
+  if (!confirm('Remove this person?')) return;
+  S.s('people', getPeople().filter(p=>p.id!==id));
+  renderSavedPeople();
+  renderDash();
+  toast('Removed', false);
+}
+
+// Quick add person from add expense screen
+function openQuickAddPerson() {
+  document.getElementById('qp-name').value = '';
+  document.getElementById('qp-phone').value = '';
+  document.getElementById('qp-upi').value = '';
+  document.getElementById('m-quick-person').classList.add('open');
+}
+
+function saveQuickPerson() {
+  const name = document.getElementById('qp-name').value.trim();
+  if (!name) { toast('Enter a name', false); return; }
+  const phone = document.getElementById('qp-phone').value.trim();
+  const upiId = document.getElementById('qp-upi').value.trim();
+  const people = getPeople();
+  people.push({ id:uid(), name, phone, upiId, createdAt:Date.now() });
+  S.s('people', people);
+  closeOverlay('m-quick-person');
+  toast(name + ' added!', true);
+  // Refresh member list in add expense
+  setupAddExpense();
+}
+
+// ═══════════════════════════════════════
+// GROUPS
+// ═══════════════════════════════════════
+let selGrpTypeVal = 'trip';
+
+function renderGroups() {
+  const groups = getGroups();
+  const list = document.getElementById('groups-list');
+  const empty = document.getElementById('groups-empty');
+  if (!groups.length) { list.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  const exps = getExpenses();
+  list.innerHTML = groups.map(g => {
+    const ge = exps.filter(e=>e.groupId===g.id);
+    const total = ge.reduce((s,e)=>s+e.totalAmount,0);
+    const mems = (g.memberIds||[]).map(id=>getPersonById(id)).filter(Boolean);
+    return `<div class="gcard fade-in" onclick="openGroup('${g.id}')">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        <div class="gemoji">${g.emoji}</div>
+        <div class="gmeta"><h3>${g.name}</h3><span>${mems.length+1} members · ${ge.length} expenses</span></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;">
+        <div><div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.4px;">Total spent</div><div style="font-size:18px;font-weight:800;">₹${total.toFixed(0)}</div></div>
+        <div style="text-align:right;"><div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.4px;">Expenses</div><div style="font-size:18px;font-weight:800;">${ge.length}</div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selGrpType(el) {
+  selGrpTypeVal = el.dataset.v;
+  document.querySelectorAll('#grp-type-chips .chip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+}
+
+function setupCreateGroup() {
+  const me = getMe();
+  const people = getPeople();
+  const all = me?[me,...people]:people;
+  renderMemberChecks('grp-members', all, []);
+}
+
+function saveGroup() {
+  const name = document.getElementById('grp-name').value.trim();
+  if (!name) { toast('Enter a group name', false); return; }
+  const memberIds = getCheckedIds('grp-members');
+  const emoji = GT_EMOJIS[selGrpTypeVal]||'📦';
+  const groups = getGroups();
+  groups.push({ id:uid(), name, type:selGrpTypeVal, emoji, memberIds, createdAt:Date.now() });
+  S.s('groups', groups);
+  document.getElementById('grp-name').value = '';
+  goBack();
+  toast('Group created! 🎉', true);
+}
+
+function openGroup(groupId) {
+  currentGroupId = groupId;
+  const g = getGroups().find(g=>g.id===groupId);
+  if (!g) return;
+  document.getElementById('gd-name').textContent = g.name;
+  document.getElementById('gd-emoji').textContent = g.emoji;
+
+  const me = getMe();
+  const exps = getExpenses().filter(e=>e.groupId===groupId);
+  const total = exps.reduce((s,e)=>s+e.totalAmount,0);
+  document.getElementById('gd-total').textContent = '₹'+total.toFixed(0);
+
+  const allIds = [...new Set([me?.id,...(g.memberIds||[])])].filter(Boolean);
+  const netMap = {};
+  allIds.forEach(id=>netMap[id]=0);
+  exps.forEach(exp => {
+    if (!exp.splits) return;
+    netMap[exp.paidById] = (netMap[exp.paidById]||0) + exp.totalAmount;
+    exp.splits.forEach(s => { netMap[s.userId] = (netMap[s.userId]||0) - s.amount; });
+  });
+
+  // Member balances
+  document.getElementById('gd-balances').innerHTML = allIds.map(id => {
+    const p = getPersonById(id);
+    if (!p) return '';
+    const net = netMap[id]||0;
+    return `<div class="card-sm" style="display:flex;align-items:center;gap:10px;">
+      <div class="av ${avColor(id)}" style="width:34px;height:34px;border-radius:10px;font-size:11px;">${initials(p.name)}</div>
+      <span style="flex:1;font-size:13px;font-weight:500;">${p.name}${p.isMe?' (you)':''}</span>
+      <span style="font-size:14px;font-weight:700;color:${net>=0?'var(--green)':'var(--red)'};">${net>=0?'+':''}₹${Math.abs(net).toFixed(0)}</span>
+    </div>`;
+  }).join('');
+
+  // Settlements
+  const settlements = computeSettlements(netMap, allIds);
+  document.getElementById('gd-settlements').innerHTML = !settlements.length
+    ? `<div style="font-size:12px;color:var(--green);font-weight:600;">✓ All settled up!</div>`
+    : settlements.map(s => {
+        const from = getPersonById(s.from);
+        const to = getPersonById(s.to);
+        return `<div class="settle-item">
+          <div style="display:flex;align-items:center;gap:6px;font-size:13px;">
+            <strong>${from?.name||'?'}</strong><span style="color:var(--txt3);">→</span><strong>${to?.name||'?'}</strong>
+          </div>
+          <span style="font-size:15px;font-weight:700;color:var(--green);">₹${s.amount.toFixed(0)}</span>
+        </div>`;
+      }).join('');
+
+  // Expenses
+  document.getElementById('gd-expenses').innerHTML = !exps.length
+    ? `<div style="color:var(--txt3);font-size:13px;text-align:center;padding:16px;">No expenses yet</div>`
+    : [...exps].sort((a,b)=>b.createdAt-a.createdAt).map(exp => {
+        const payer = getPersonById(exp.paidById);
+        return `<div class="exp-item">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:34px;height:34px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:16px;">${exp.catIcon||'📦'}</div>
+            <div><div style="font-size:13px;font-weight:600;">${exp.title}</div><div style="font-size:11px;color:var(--txt3);">${payer?.name||'?'} paid · ${new Date(exp.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</div></div>
+          </div>
+          <div style="font-size:14px;font-weight:700;">₹${exp.totalAmount.toFixed(0)}</div>
+        </div>`;
+      }).join('');
+
+  nav('s-group-detail');
+}
+
+function computeSettlements(balances, ids) {
+  const owers=[], receivers=[];
+  ids.forEach(id => {
+    const b=balances[id]||0;
+    if (b<-0.01) owers.push({id,amt:-b});
+    else if (b>0.01) receivers.push({id,amt:b});
+  });
+  const res=[]; let i=0,j=0;
+  while(i<owers.length&&j<receivers.length){
+    const pay=Math.min(owers[i].amt,receivers[j].amt);
+    if(pay>0.01) res.push({from:owers[i].id,to:receivers[j].id,amount:pay});
+    owers[i].amt-=pay; receivers[j].amt-=pay;
+    if(owers[i].amt<0.01) i++;
+    if(receivers[j].amt<0.01) j++;
+  }
+  return res;
+}
+
+function addExpToGroup() {
+  pendingExpenseGroupId = currentGroupId;
+  nav('s-add-expense');
+}
+
+// ═══════════════════════════════════════
+// ACTIVITY
+// ═══════════════════════════════════════
+function renderActivity() {
+  const exps = getExpenses().sort((a,b)=>b.createdAt-a.createdAt);
+  const me = getMe();
+  const list = document.getElementById('activity-list');
+  const empty = document.getElementById('activity-empty');
+  if (!exps.length) { list.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  list.innerHTML = exps.map(exp => {
+    const payer = getPersonById(exp.paidById);
+    const youPaid = exp.paidById===me?.id;
+    const mySplit = exp.splits?.find(s=>s.userId===me?.id);
+    const date = new Date(exp.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+    return `<div class="aitem fade-in">
+      <div class="aicon">${exp.catIcon||'📦'}</div>
+      <div class="abody">
+        <div class="atitle">${exp.title}</div>
+        <div class="asub">${youPaid?'You paid':payer?.name+' paid'} · ${date}${exp.groupId?' · '+getGroups().find(g=>g.id===exp.groupId)?.name||'':''}</div>
+      </div>
+      <div>
+        <div class="aamt" style="color:${youPaid?'var(--green)':'var(--txt2)'};">₹${exp.totalAmount.toFixed(0)}</div>
+        ${mySplit&&!youPaid?`<div style="font-size:10px;color:var(--red);text-align:right;">your share: ₹${mySplit.amount.toFixed(0)}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════
+// INSIGHTS (viral feature)
+// ═══════════════════════════════════════
+function renderInsights() {
+  const exps = getExpenses();
+  const people = getPeople();
+  const bal = calcBalances();
+
+  const totalSplit = exps.reduce((s,e)=>s+e.totalAmount,0);
+  const totalPending = Object.values(bal).reduce((s,v)=>s+(v>0?v:0),0);
+
+  document.getElementById('ins-total').textContent = fmt(totalSplit);
+  document.getElementById('ins-pending').textContent = fmt(totalPending);
+  document.getElementById('ins-expenses').textContent = exps.length;
+  document.getElementById('ins-people').textContent = people.length;
+
+  // Category spending
+  const catTotals = {};
+  exps.forEach(e => { catTotals[e.category] = (catTotals[e.category]||0) + e.totalAmount; });
+  const sortedCats = Object.entries(catTotals).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const maxCat = sortedCats[0]?.[1]||1;
+  const catColors = ['var(--purple)','var(--green)','var(--amber)','var(--red)','var(--blue)','#2DD4BF'];
+  document.getElementById('ins-cats').innerHTML = sortedCats.length===0
+    ? `<div style="color:var(--txt3);font-size:13px;">No expenses yet</div>`
+    : sortedCats.map(([cat,amt],i) => {
+        const c = CATS.find(x=>x.id===cat);
+        const pct = Math.round((amt/maxCat)*100);
+        return `<div class="catbar-row">
+          <div class="catbar-top"><span style="font-size:12px;">${c?.e||'📦'} ${c?.l||cat}</span><span style="font-size:12px;font-weight:600;">${fmt(amt)}</span></div>
+          <div class="catbar-track"><div class="catbar-fill" style="width:${pct}%;background:${catColors[i]};"></div></div>
+        </div>`;
+      }).join('');
+
+  // Split scores
+  document.getElementById('ins-scores').innerHTML = people.length===0
+    ? `<div style="color:var(--txt3);font-size:13px;">Add people to see scores</div>`
+    : people.map(p => {
+        const score = getSplitScore(p.id);
+        const sl = scoreLabel(score);
+        const w = score + '%';
+        return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+          <div class="av ${avColor(p.id)}" style="width:34px;height:34px;border-radius:10px;font-size:11px;flex-shrink:0;">${initials(p.name)}</div>
+          <div style="flex:1;">
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;"><span>${p.name}</span><span style="color:${sl.color};font-weight:700;">${score}/100 ${sl.label}</span></div>
+            <div class="catbar-track"><div class="catbar-fill" style="width:${w};background:${sl.color};"></div></div>
+          </div>
+        </div>`;
+      }).join('');
+
+  // Hall of shame (defaulters)
+  const defaulters = people.filter(p => {
+    const net = bal[p.id]||0;
+    const ts = getOldestPending(p.id);
+    return net > 0 && ts && daysSince(ts) >= 7;
+  });
+  const defCard = document.getElementById('ins-defaulter-card');
+  if (defaulters.length > 0) {
+    defCard.style.display = 'block';
+    document.getElementById('ins-defaulters').innerHTML = defaulters.map(p => {
+      const net = bal[p.id]||0;
+      const ts = getOldestPending(p.id);
+      const days = ts ? daysSince(ts) : 0;
+      return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div class="av av-r" style="width:38px;height:38px;border-radius:12px;font-size:13px;flex-shrink:0;">${initials(p.name)}</div>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:600;">${p.name} <span class="badge-def">🐢 Defaulter</span></div>
+          <div style="font-size:11px;color:var(--txt3);">Owes ${fmt(net)} · ${days} days pending</div>
+        </div>
+        <button onclick="currentPersonId='${p.id}';openReminder();" style="background:var(--red-dim);color:var(--red);border:none;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:600;cursor:pointer;">Roast 🔥</button>
+      </div>`;
+    }).join('');
+  } else {
+    defCard.style.display = 'none';
+  }
+}
+
+// ═══════════════════════════════════════
+// PROFILE
+// ═══════════════════════════════════════
+function renderProfile() {
+  const me = getMe();
+  if (!me) return;
+  document.getElementById('prof-av').textContent = initials(me.name);
+  document.getElementById('prof-name').textContent = me.name;
+  document.getElementById('prof-upi').textContent = me.upiId||'No UPI ID set';
+  document.getElementById('s-name').textContent = me.name;
+  document.getElementById('s-upi').textContent = me.upiId||'Not set';
+  document.getElementById('s-phone').textContent = me.phone||'Not set';
+  document.getElementById('s-pcount').textContent = getPeople().length + ' people';
+}
+
+function exportData() {
+  const data = { me:getMe(), people:getPeople(), groups:getGroups(), expenses:getExpenses(), exportedAt:new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download='splitsmart-backup.json'; a.click();
+  toast('Exported! 📁', true);
+}
+
+function clearData() {
+  if (confirm('Delete ALL data? This cannot be undone.')) {
+    ['me','people','groups','expenses','setup_done'].forEach(k=>localStorage.removeItem('ss2_'+k));
+    location.reload();
+  }
+}
+
+// ═══════════════════════════════════════
+// MODALS
+// ═══════════════════════════════════════
+function closeOverlay(id) { document.getElementById(id)?.classList.remove('open'); }
+function closeOverlayOutside(e, id) { if (e.target.id===id) closeOverlay(id); }
+
+// ═══════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════
+let toastT = null;
+function toast(msg, ok=true) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show ' + (ok?'ok':'err');
+  clearTimeout(toastT);
+  toastT = setTimeout(()=>el.classList.remove('show'), 2600);
+}
+
+// ═══════════════════════════════════════
+// CONFETTI
+// ═══════════════════════════════════════
+function showConfetti() {
+  const colors = ['#00E676','#7C3AED','#FF4569','#F59E0B','#3B82F6','#2DD4BF'];
+  const c = document.getElementById('conf');
+  c.innerHTML = '';
+  for (let i=0;i<40;i++) {
+    const p = document.createElement('div');
+    p.className = 'conf-p';
+    const col = colors[Math.floor(Math.random()*colors.length)];
+    p.style.cssText = `left:${Math.random()*100}%;background:${col};animation-delay:${Math.random()*0.6}s;animation-duration:${1.2+Math.random()*1}s;width:${5+Math.random()*7}px;height:${5+Math.random()*7}px;border-radius:${Math.random()>0.5?'50%':'2px'};`;
+    c.appendChild(p);
+  }
+  setTimeout(()=>c.innerHTML='', 3500);
+}
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  const done = S.g('setup_done');
+  const me = getMe();
+  if (!done || !me) {
+    showScreen('s-onboard');
+  } else {
+    showScreen('s-home');
+    renderDash();
+  }
+});
+
+// PWA install prompt
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  setTimeout(() => {
+    const b = document.createElement('div');
+    b.style.cssText = 'position:fixed;bottom:calc(80px + var(--sab));left:16px;right:16px;background:var(--bg2);border:0.5px solid rgba(124,58,237,0.5);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;z-index:150;';
+    b.innerHTML = `<div style="flex:1;"><div style="font-size:13px;font-weight:600;">Install SplitSmart</div><div style="font-size:11px;color:var(--txt3);">Add to home screen</div></div><button onclick="deferredPrompt.prompt();this.parentElement.remove();" style="background:var(--purple);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;">Install</button><button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--txt3);font-size:20px;cursor:pointer;">×</button>`;
+    document.body.appendChild(b);
+    setTimeout(()=>b.remove(), 9000);
+  }, 4000);
+});
+</script>
+</body>
+</html>
