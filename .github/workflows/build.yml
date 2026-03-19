@@ -15,11 +15,9 @@ jobs:
       - uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: '8.4'
-      - name: Download Gradle Wrapper JAR
-        run: |
-          mkdir -p gradle/wrapper
-          curl -L --retry 3 "https://raw.githubusercontent.com/gradle/gradle/v8.4.0/gradle/wrapper/gradle-wrapper.jar" -o gradle/wrapper/gradle-wrapper.jar
-  - run: chmod +x gradlew
+      - name: Download Wrapper
+        run: mkdir -p gradle/wrapper && curl -L "https://raw.githubusercontent.com/gradle/gradle/v8.4.0/gradle/wrapper/gradle-wrapper.jar" -o gradle/wrapper/gradle-wrapper.jar
+      - run: chmod +x gradlew
       - uses: android-actions/setup-android@v3
       - run: yes | sdkmanager --licenses || true
       - run: ./gradlew assembleDebug --no-daemon --stacktrace
